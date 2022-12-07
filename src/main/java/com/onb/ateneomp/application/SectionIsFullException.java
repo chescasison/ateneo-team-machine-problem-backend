@@ -1,7 +1,10 @@
 package com.onb.ateneomp.application;
 
-public class SectionIsFullException extends RuntimeException{
-	public SectionIsFullException() {
-		super("Section is already full.");
+public class SectionIsFullException extends EnrollmentException{
+	private final String MESSAGE = "Section is already full.";
+	
+	@Override
+	public String getMessage() {
+		return MESSAGE;
 	}
 }

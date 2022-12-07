@@ -76,4 +76,9 @@ public interface EnrollmentRepository extends CrudRepository<Enrollment, Integer
 			+ "where e.student_id = 4\n"
 			+ "and oc.term_id = 1", nativeQuery=true)
 	Collection<EnrollmentAssessmentObject> getEnrollmentAssessmentOfStudent(int studentId);
+	
+	@Query(value="SELECT * FROM enrollment e"
+			  + " WHERE e.id = ?1", nativeQuery = true)
+	Enrollment findEnrollmentById(int id);
+
 }

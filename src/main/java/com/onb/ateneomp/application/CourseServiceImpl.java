@@ -17,8 +17,12 @@ public class CourseServiceImpl implements CourseService{
 	@Override
 	public Course getCourse(int courseId) {
 		Optional<Course> course = courseRepository.findById(courseId);
-		if (course.isPresent()) return course.get();
-		else throw new IllegalArgumentException("Course does not exist.");
+		if (course.isPresent()) {
+			return course.get();
+		}
+		else {
+			throw new IllegalArgumentException("Course does not exist.");
+		}
 	}
 
 }

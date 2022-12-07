@@ -16,9 +16,7 @@ public class TermServiceImpl implements TermService{
 	
 	@Override
 	public Term getTerm(int termId) {
-		Optional<Term> term = termRepository.findById(termId);
-		if (term.isPresent()) return term.get();
-		else throw new IllegalArgumentException("Term does not exist");
+		return termRepository.findById(termId).get();
 	}
 
 }

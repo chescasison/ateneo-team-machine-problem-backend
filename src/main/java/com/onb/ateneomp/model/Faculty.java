@@ -12,9 +12,9 @@ public class Faculty extends User {
 	@GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "facultyIdGenerator")
 	private int id;
 	
-	public Faculty() {}
+	protected Faculty() {}
 	
-	public Faculty(String name) {
+	protected Faculty(String name) {
 		super(name, "admin");
 	}
 
@@ -22,4 +22,19 @@ public class Faculty extends User {
 		return id;
 	}
 	
+	@Override
+	public boolean equals(Object object) {
+		if (this.id == ((Faculty)object).getId()) {
+			return true;
+		}
+		else {
+			return false;
+		}
+	}
+	
+    @Override
+    public int hashCode() {
+        int result = 17;
+        return 31 * result + this.id;
+    }
 }

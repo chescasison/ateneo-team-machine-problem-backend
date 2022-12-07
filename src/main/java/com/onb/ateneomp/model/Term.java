@@ -1,6 +1,7 @@
 package com.onb.ateneomp.model;
 
 import java.time.LocalDate;
+import java.util.Objects;
 
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
@@ -17,11 +18,16 @@ public class Term {
 	private LocalDate startYear;
 	private LocalDate endYear;
 	
-	public Term() {}
+	protected Term() {}
 	
-	public Term(int termNumber, LocalDate startYear, LocalDate endYear) {
+	protected Term(int termNumber, LocalDate startYear, LocalDate endYear) {
+		
 		this.termNumber = termNumber;
+		
+		Objects.requireNonNull(startYear, "startYear must not be null");
 		this.startYear = startYear;
+		
+		Objects.requireNonNull(endYear, "endYear must not be null");
 		this.endYear = endYear;
 	}
 
@@ -46,5 +52,20 @@ public class Term {
 		return "Term [id=" + id + ", termNumber=" + termNumber + ", startYear=" + startYear + ", endYear=" + endYear
 				+ "]";
 	}
-
+	
+	@Override
+	public boolean equals(Object object) {
+		if (this.id == ((Term)object).getId()) {
+			return true;
+		}
+		else {
+			return false;
+		}
+	}
+	
+    @Override
+    public int hashCode() {
+        int result = 17;
+        return 31 * result + this.id;
+    }
 }

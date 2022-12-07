@@ -1,9 +1,11 @@
 package com.onb.ateneomp.application;
 
-public class ConflictScheduleException extends RuntimeException {
+public class ConflictScheduleException extends EnrollmentException {
 	
-	public ConflictScheduleException() {
-		super("Cannot add section because of schedule conflict.");
+	private final String MESSAGE = "Cannot add section because of schedule conflict.";
+	
+	@Override
+	public String getMessage() {
+		return MESSAGE;
 	}
-
 }

@@ -15,19 +15,19 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 public class ApplicationController {
 
-	private static final Logger logger = LoggerFactory.getLogger(StudentController.class);
+	private static final Logger LOGGER = LoggerFactory.getLogger(StudentController.class);
 	
 	@GetMapping("user/login")
 	public String login() {
 		SecurityContextHolder.getContext().getAuthentication();
-		logger.info("Logged in!");
+		// LOGGER.info("Logged in!");
 		return "Logged in";
 	}
 	
 	@RequestMapping("user/logout")
 	public String logout() {
 		SecurityContextHolder.getContext().setAuthentication(null);
-		logger.info("Successfully logged out");
+		// LOGGER.info("Successfully logged out");
 		return "successfully logged out";
 	}
 

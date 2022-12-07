@@ -3,19 +3,18 @@ package com.onb.ateneomp.application;
 import java.time.DayOfWeek;
 import java.time.LocalTime;
 import java.util.List;
-import java.util.Optional;
+import java.util.stream.Collectors;
 
-import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.bind.annotation.RequestParam;
 
 import com.onb.ateneomp.model.Enrollment;
 import com.onb.ateneomp.model.OfferedCourse;
 import com.onb.ateneomp.model.Schedule;
 import com.onb.ateneomp.model.Section;
 import com.onb.ateneomp.model.Student;
+import com.onb.ateneomp.model.StudentDto;
 import com.onb.ateneomp.repository.EnrollmentRepository;
 import com.onb.ateneomp.repository.StudentRepository;
 
@@ -32,40 +31,53 @@ public class StudentServiceImpl implements StudentService{
 	private OfferedCourseService offeredCourseService;
 
 	@Override
+	@Transactional(readOnly = true)
 	public Student getStudent(int studentId) {
-		Optional<Student> student = studentRepository.findById(studentId);
-		if (student.isPresent()) return student.get();
-		else throw new IllegalArgumentException("Student does not exist.");
+		return studentRepository.findById(studentId).get();
 	}
 
 	@Override
-	public List<Student> getAllStudents() {
-		List<Student> students = (List<Student>) studentRepository.findAll();
-		return students;
+	@Transactional(readOnly = true)
+	public List<StudentDto> getAllStudents() {
+		return ((List<Student>) studentRepository.findAll()).stream()
+				.map(this::convertStudentToDto).collect(Collectors.toList());
+	}
+	
+	private StudentDto convertStudentToDto(Student student) {
+		StudentDto studentDto = new StudentDto();
+		
+		studentDto.setId(student.getId());
+		studentDto.setDegreeProgram(student.getDegreeProgram().getName());
+		studentDto.setName(student.getName());
+		studentDto.setYearlLevel(student.getYearLevel());
+		
+		return studentDto;
 	}
 
 	@Override
 	@Transactional
 	public boolean enrollStudentToCourse(Enrollment enrollment) throws ConflictScheduleException, SectionIsFullException {
 		OfferedCourse enrolledCourse = enrollment.getEnrolledCourse();
-		int studentId = enrollment.getStudent().getId();
-		sectionHasConflict(enrolledCourse.getId(), studentId, enrollment.getEnrolledCourse().getTerm().getId());
-		sectionIsFull(enrollment.getEnrolledCourse().getId());
+		Student student = enrollment.getStudent();
+		
+		sectionHasConflict(enrolledCourse, student);
+		sectionIsFull(enrolledCourse);
+		
 		enrollmentRepository.save(enrollment);
 		return true;
 	}
 
 	@Override
 	@Transactional
-	public void updateSectionOfStudent(int enrollmentId, int newOfferedCourseId, int termId) {
-		Optional<Enrollment> optionalEnrollment = enrollmentRepository.findById(enrollmentId);
-		if (optionalEnrollment.isEmpty()) throw new IllegalArgumentException("Enrollment does not exist.");
-		Enrollment enrollment = optionalEnrollment.get();
+	public void updateSectionOfStudent(int enrollmentId, int newOfferedCourseId) {
+		Enrollment enrollment = enrollmentRepository.findById(enrollmentId).get();
+		Student student = enrollment.getStudent();
+		
 		OfferedCourse newOfferedCourse = offeredCourseService.getOfferedCourse(newOfferedCourseId);
-		int studentId = enrollment.getStudent().getId();
-		sectionHasConflict(newOfferedCourse.getId(), studentId, termId);
-		sectionIsFull(newOfferedCourseId);
-		enrollment.setEnrolledCourse(newOfferedCourse);
+		sectionHasConflict(newOfferedCourse, student);
+		sectionIsFull(newOfferedCourse);
+		
+		enrollment.enroll(newOfferedCourse);
 		enrollmentRepository.save(enrollment);
 	}
 
@@ -74,28 +86,32 @@ public class StudentServiceImpl implements StudentService{
 	public void deleteCourseOfStudent(int offeredCourseId, int studentId) {
 		OfferedCourse course = offeredCourseService.getOfferedCourse(offeredCourseId);
 		Student student = studentRepository.findById(studentId).get();
-		Optional<Enrollment> enrollment = enrollmentRepository.findByStudentAndEnrolledCourse(student, course);
-		if (enrollment.isEmpty()) throw new IllegalArgumentException("Enrollment does not exist.");
-		enrollmentRepository.delete(enrollment.get());
+		
+		Enrollment enrollment = enrollmentRepository.findByStudentAndEnrolledCourse(student, course).get();
+		enrollmentRepository.delete(enrollment);
 	}
 
 	@Override
-	public List<OfferedCourse> getEnrolledCoursesOfAStudent(int studentId, int termId) {
+	@Transactional(readOnly = true)
+	public List<OfferedCourse> getEnrolledCoursesOfStudent(int studentId, int termId) {
 		List<Integer> enrolledCoursesIds = enrollmentRepository.getEnrolledCoursesOfStudent(studentId, termId);
-		List<OfferedCourse> enrolledCourses = offeredCourseService.getOfferedCourses(enrolledCoursesIds);
-		return enrolledCourses;
+		
+		return offeredCourseService.getOfferedCourses(enrolledCoursesIds);
 	}
 
-	public void sectionHasConflict(int offeredCourseId, int studentId, int termId) throws ConflictScheduleException {
-		OfferedCourse offeredCourse = offeredCourseService.getOfferedCourse(offeredCourseId);
+	public void sectionHasConflict(OfferedCourse offeredCourse, Student student) throws ConflictScheduleException {
 		Schedule offeredCourseSchedule = offeredCourse.getSchedule();
 		
 		DayOfWeek offeredDay1 = offeredCourseSchedule.getDay1();
 		LocalTime offeredDay1StartTime = offeredCourseSchedule.getDay1StartTime();
 		LocalTime offeredDay1EndTime = offeredCourseSchedule.getDay1EndTime();
+		
 		DayOfWeek offeredDay2 = offeredCourseSchedule.getDay2();
 		LocalTime offeredDay2StartTime = offeredCourseSchedule.getDay2StartTime();
 		LocalTime offeredDay2EndTime = offeredCourseSchedule.getDay2EndTime();
+
+		int studentId = student.getId();
+		int termId = offeredCourse.getTerm().getId();
 		List<OfferedCourse> enrolledCourses = offeredCourseService.getOfferedCourses(enrollmentRepository.getEnrolledCoursesOfStudent(studentId, termId));
 		
 		for (OfferedCourse enrolledCourse : enrolledCourses) {
@@ -123,7 +139,7 @@ public class StudentServiceImpl implements StudentService{
 		}
 	}
 
-	private boolean areConflict(DayOfWeek day1, LocalTime startTime1, LocalTime endTime1,
+	public boolean areConflict(DayOfWeek day1, LocalTime startTime1, LocalTime endTime1,
 			DayOfWeek day2, LocalTime startTime2, LocalTime endTime2) {
 		if (day1 == null || day2 == null) {
 			return false;
@@ -136,24 +152,30 @@ public class StudentServiceImpl implements StudentService{
 		}
 	}
 
-	public void sectionIsFull(int offeredCourseId) throws SectionIsFullException {
-		OfferedCourse offeredCourse = offeredCourseService.getOfferedCourse(offeredCourseId);
+	public void sectionIsFull(OfferedCourse offeredCourse) throws SectionIsFullException {
+		int termId = offeredCourse.getTerm().getId();
+		
 		Section section = offeredCourse.getSection();
 		int sectionId = section.getId();
-		int termId = offeredCourse.getTerm().getId();
+		
 		int takenSeats = enrollmentRepository.getTakenSeatsOfASection(sectionId, termId);
 		int numberOfSeats = section.getNumberOfSeats();
-		if (takenSeats == numberOfSeats) throw new SectionIsFullException();
+		
+		if (takenSeats == numberOfSeats) {
+			throw new SectionIsFullException();
+		}
 	}
 
 	@Override
-	public List<Student> getStudentsInASection(int offeredCourseId, int termId) {
+	@Transactional(readOnly = true)
+	public List<StudentDto> getStudentsInASection(int offeredCourseId, int termId) {
 		List<Integer> studentIds = enrollmentRepository.getEnrolledStudentsInTheCourse(offeredCourseId, termId);
-		List<Student> students = (List<Student>) studentRepository.findAllById(studentIds);
-		return students;
+		return ((List<Student>) studentRepository.findAllById(studentIds)).stream()
+				.map(this::convertStudentToDto).collect(Collectors.toList());
 	}
 
 	@Override
+	@Transactional(readOnly = true)
 	public int getDegreeIdOfStudent(int studentId) {
 		return studentRepository.getDegreeIdOfStudent(studentId);
 	}

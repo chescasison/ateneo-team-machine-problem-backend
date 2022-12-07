@@ -1,10 +1,11 @@
 package com.onb.ateneomp;
 
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.util.List;
-import java.util.Optional;
 
 import javax.transaction.Transactional;
 
@@ -23,7 +24,7 @@ import com.onb.ateneomp.repository.EnrollmentRepository;
 
 @SpringBootTest
 @Transactional
-class AteneoMpApplicationTests {
+class AteneoMpApplicationIntegrationTests {
 
 	@Autowired
 	StudentService studentService;
@@ -47,7 +48,7 @@ class AteneoMpApplicationTests {
 		
 		Enrollment insertedEnrollment = enrollmentRepository.findByStudentAndEnrolledCourse(student, offeredCourse).get();
 		
-		assertThat(insertedEnrollment).isNotNull();
+		assertNotNull(insertedEnrollment);
 	}
 	
 	@Test
@@ -60,9 +61,9 @@ class AteneoMpApplicationTests {
 		
 		Enrollment enrollment = new Enrollment(student, offeredCourse);
 		
-		assertThatThrownBy(() -> {
+		assertThrows(SectionIsFullException.class, () -> {
 			studentService.enrollStudentToCourse(enrollment);
-		}).isInstanceOf(SectionIsFullException.class);
+		});
 	}
 
 	@Test
@@ -83,25 +84,24 @@ class AteneoMpApplicationTests {
 		
 		Enrollment newEnrollment = new Enrollment(student, newOfferedCourse);
 		
-		assertThatThrownBy(() -> {
+		assertThrows(ConflictScheduleException.class, () -> {
 			studentService.enrollStudentToCourse(newEnrollment);
-		}).isInstanceOf(ConflictScheduleException.class);
+		});
 	}
 	
 	@Test
 	void updateSectionOfStudentTest() {
-		int enrollmentId = -22;
+		int enrollmentId = -10;
 		int newOfferedCourseId = 7;
-		int termId = 1;
 		
 		Enrollment enrollment = enrollmentRepository.findById(enrollmentId).get();
 		int oldOfferedCourseId = enrollment.getEnrolledCourse().getId();
 		
-		studentService.updateSectionOfStudent(enrollmentId, newOfferedCourseId, termId);
+		studentService.updateSectionOfStudent(enrollmentId, newOfferedCourseId);
 		
 		Enrollment updatedEnrollment = enrollmentRepository.findById(enrollmentId).get();
 
-		assertThat(updatedEnrollment.getEnrolledCourse().getId()).isNotEqualTo(oldOfferedCourseId);
+		assertTrue(updatedEnrollment.getEnrolledCourse().getId() != oldOfferedCourseId);
 	}
 	
 	@Test
@@ -109,11 +109,11 @@ class AteneoMpApplicationTests {
 		int enrollmentId = -101;
 		int studentId = 6;
 		int offeredCourseId = 11;
+		
 		studentService.deleteCourseOfStudent(offeredCourseId, studentId);
 		
-		Optional<Enrollment> enrollment = enrollmentRepository.findById(enrollmentId);
-		
-		assertThat(enrollment).isEmpty();
+		Enrollment enrollment = enrollmentRepository.findEnrollmentById(enrollmentId);
+		assertNull(enrollment);
 	}
 	
 	@Test
@@ -122,9 +122,10 @@ class AteneoMpApplicationTests {
 		int termId = 1;
 		int offeredCourseId = 5;
 		
-		List<OfferedCourse> studentCourses = studentService.getEnrolledCoursesOfAStudent(studentId, termId);
+		List<OfferedCourse> studentCourses = studentService.getEnrolledCoursesOfStudent(studentId, termId);
 		OfferedCourse offeredCourse = offeredCourseService.getOfferedCourse(offeredCourseId);
-		assertThat(studentCourses.get(0)).isEqualTo(offeredCourse);
+		
+		assertTrue(studentCourses.get(0) == offeredCourse);
 	}
 
 }

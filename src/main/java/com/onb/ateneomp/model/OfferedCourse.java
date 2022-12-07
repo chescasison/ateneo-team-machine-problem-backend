@@ -1,5 +1,7 @@
 package com.onb.ateneomp.model;
 
+import java.util.Objects;
+
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
@@ -34,11 +36,16 @@ public class OfferedCourse {
 	@JoinColumn(name = "termId")
 	private Term term;
 	
-	public OfferedCourse() {}
-	
+	protected OfferedCourse() {}
+
 	public OfferedCourse(Course course, Section section, Term term) {
+		Objects.requireNonNull(course, "Course must not be null");
 		this.course = course;
+		
+		Objects.requireNonNull(section, "Section must not be null");
 		this.section = section;
+		
+		Objects.requireNonNull(term, "Term must not be null");
 		this.term = term;
 	}
 
@@ -72,6 +79,20 @@ public class OfferedCourse {
 				+ ", schedule=" + schedule + ", room=" + room + "]";
 	}
 
+	@Override
+	public boolean equals(Object object) {
+		if (this.id == ((OfferedCourse)object).getId()) {
+			return true;
+		}
+		else {
+			return false;
+		}
+	}
 	
+    @Override
+    public int hashCode() {
+        int result = 17;
+        return 31 * result + this.id;
+    }
 
 }

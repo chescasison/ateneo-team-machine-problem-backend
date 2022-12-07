@@ -1,5 +1,7 @@
 package com.onb.ateneomp.model;
 
+import java.util.Objects;
+
 import javax.persistence.Entity;
 import javax.persistence.FetchType;
 import javax.persistence.GeneratedValue;
@@ -7,6 +9,8 @@ import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
+
+import org.springframework.util.StringUtils;
 
 @Entity
 public class Student extends User{
@@ -22,12 +26,18 @@ public class Student extends User{
 	private int yearLevel;
 	private String status;
 	
-	public Student() {}
+	protected Student() {}
 	
-	public Student(String name, Degree degreeProgram, int yearLevel, String status) {
+	protected Student(String name, Degree degreeProgram, int yearLevel, String status) {
 		super(name, "student");
+		
+		Objects.requireNonNull(degreeProgram, "degreeProgram must not be null");
 		this.degreeProgram = degreeProgram;
 		this.yearLevel = yearLevel;
+		
+		if (!StringUtils.hasText(status)) {
+			throw new IllegalArgumentException();
+		}
 		this.status = status;
 	}
 	
@@ -52,5 +62,21 @@ public class Student extends User{
 		return "Student [id=" + id + ", degreeProgram=" + degreeProgram + ", yearLevel="
 				+ yearLevel + ", status=" + status + "]";
 	}
+	
+	@Override
+	public boolean equals(Object object) {
+		if (this.id == ((Student)object).getId()) {
+			return true;
+		}
+		else {
+			return false;
+		}
+	}
+	
+    @Override
+    public int hashCode() {
+        int result = 17;
+        return 31 * result + this.id;
+    }
 	
 }

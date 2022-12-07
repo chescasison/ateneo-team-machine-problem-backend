@@ -29,10 +29,7 @@ public class EnrollmentAssessmentFormService {
 	
 	@Autowired
 	private EnrollmentRepository enrollmentRepository;
-	
-//	@Autowired
-//	private DataSource datasource;
-	
+
 	public String exportReport() throws FileNotFoundException, JRException, SQLException {
 		String outputPath = "/home/francesca/Documents/Ateneo Jasper Reports";
 		int studentId = 4; //TODO: get currently logged in student
