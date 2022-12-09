@@ -24,7 +24,7 @@ import com.onb.ateneomp.repository.EnrollmentRepository;
 
 @SpringBootTest
 @Transactional
-class AteneoMpApplicationIntegrationTests {
+class AteneoMpApplicationIT {
 
 	@Autowired
 	StudentService studentService;

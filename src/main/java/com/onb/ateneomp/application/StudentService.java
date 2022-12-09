@@ -13,7 +13,7 @@ public interface StudentService {
 	
 	Student getStudent(int studentId);
 	List<StudentDto> getAllStudents();
-	boolean enrollStudentToCourse(Enrollment enrollment) throws ConflictScheduleException, SectionIsFullException;
+	void enrollStudentToCourse(Enrollment enrollment) throws ConflictScheduleException, SectionIsFullException;
 	List<StudentDto> getStudentsInASection(int offeredCourseId, int termId);
 	List<OfferedCourse> getEnrolledCoursesOfStudent(int studentId, int termId);
 	void updateSectionOfStudent(int enrollmentId, int offeredCourseId);

@@ -23,7 +23,7 @@ public class Course {
 	
 	protected Course() {}
 
-	protected Course(int id, String courseCode, String courseDescription, int units) {
+	public Course(int id, String courseCode, String courseDescription, int units) {
 		this.id = id;
 		this.units = units;
 		

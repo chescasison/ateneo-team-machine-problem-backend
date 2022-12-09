@@ -4,7 +4,6 @@ import java.time.DayOfWeek;
 import java.time.LocalTime;
 import java.util.List;
 import java.util.stream.Collectors;
-
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -56,7 +55,7 @@ public class StudentServiceImpl implements StudentService{
 
 	@Override
 	@Transactional
-	public boolean enrollStudentToCourse(Enrollment enrollment) throws ConflictScheduleException, SectionIsFullException {
+	public void enrollStudentToCourse(Enrollment enrollment) throws ConflictScheduleException, SectionIsFullException {
 		OfferedCourse enrolledCourse = enrollment.getEnrolledCourse();
 		Student student = enrollment.getStudent();
 		
@@ -64,7 +63,6 @@ public class StudentServiceImpl implements StudentService{
 		sectionIsFull(enrolledCourse);
 		
 		enrollmentRepository.save(enrollment);
-		return true;
 	}
 
 	@Override
@@ -156,7 +154,7 @@ public class StudentServiceImpl implements StudentService{
 		int termId = offeredCourse.getTerm().getId();
 		
 		Section section = offeredCourse.getSection();
-		int sectionId = section.getId();
+		int sectionId = offeredCourse.getSection().getId();
 		
 		int takenSeats = enrollmentRepository.getTakenSeatsOfASection(sectionId, termId);
 		int numberOfSeats = section.getNumberOfSeats();

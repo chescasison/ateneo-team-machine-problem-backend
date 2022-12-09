@@ -38,12 +38,18 @@ public class OfferedCourse {
 	
 	protected OfferedCourse() {}
 
-	public OfferedCourse(Course course, Section section, Term term) {
+	public OfferedCourse(Course course, Section section, Schedule schedule, Room room, Term term) {
 		Objects.requireNonNull(course, "Course must not be null");
 		this.course = course;
 		
 		Objects.requireNonNull(section, "Section must not be null");
 		this.section = section;
+		
+		Objects.requireNonNull(schedule, "Schedule must not be null");
+		this.schedule = schedule;
+		
+		Objects.requireNonNull(room, "Room must not be null");
+		this.room = room;
 		
 		Objects.requireNonNull(term, "Term must not be null");
 		this.term = term;
